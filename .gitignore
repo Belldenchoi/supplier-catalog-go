@@ -1,0 +1,8 @@
+/.tools/
+/bin/
+/data/
+/.demo-work/
+*.db
+*.db.lock
+coverage.out
+__pycache__/

@@ -1,0 +1,10 @@
+{
+  "supplier_id": "northstar",
+  "update_id": "corrections",
+  "batches": [
+    [
+      {"sku":"MUG","version":4,"name":"Harbor mug, ocean blue","price_cents":1299,"currency":"USD","withdrawn":false},
+      {"sku":"INK","version":2,"name":"Writing ink","price_cents":499,"currency":"USD","withdrawn":false}
+    ]
+  ]
+}

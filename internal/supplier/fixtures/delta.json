@@ -1,0 +1,22 @@
+{
+  "supplier_id": "northstar",
+  "update_id": "delta",
+  "batches": [
+    [
+      {"sku":"MUG","version":3,"name":"Harbor mug, ocean blue","price_cents":1299,"currency":"USD","withdrawn":false},
+      {"sku":"LAMP","version":4,"withdrawn":true},
+      {"sku":"MUG","version":3,"name":"Harbor mug, ocean blue","price_cents":1299,"currency":"USD","withdrawn":false},
+      {"sku":"MUG","version":2,"name":"Older mug","price_cents":999,"currency":"USD","withdrawn":false}
+    ],
+    [
+      {"sku":"TEA","version":1,"name":"Mountain tea","price_cents":899,"currency":"USD","withdrawn":false},
+      {"sku":"LAMP","version":2,"name":"Stale desk lamp","price_cents":2999,"currency":"USD","withdrawn":false},
+      {"sku":"MUG","version":3,"name":"Conflicting mug","price_cents":1,"currency":"USD","withdrawn":false},
+      {"sku":"INK","version":1,"name":"Writing ink","price_cents":-50,"currency":"USD","withdrawn":false}
+    ],
+    [
+      {"sku":"BOOK","version":2,"name":"Field notebook, recycled paper","price_cents":699,"currency":"USD","withdrawn":false},
+      {"sku":"LAMP","version":4,"withdrawn":true}
+    ]
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "supplier_id": "northstar",
+  "update_id": "baseline",
+  "batches": [
+    [
+      {"sku":"MUG","version":1,"name":"Harbor mug","price_cents":1099,"currency":"USD","withdrawn":false},
+      {"sku":"LAMP","version":1,"name":"Desk lamp","price_cents":3499,"currency":"USD","withdrawn":false}
+    ],
+    [
+      {"sku":"BOOK","version":1,"name":"Field notebook","price_cents":599,"currency":"USD","withdrawn":false}
+    ]
+  ]
+}
