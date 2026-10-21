@@ -2,7 +2,7 @@
 
 A Go command-line application for a shop importing a fictional supplier's catalog. Staff can start or resume an update, inspect exact changes, and resolve outstanding problems. The catalog and progress survive application restarts.
 
-**Demo:** [3 minute 20 second walkthrough](docs/demo.mp4) · [written walkthrough](docs/DEMO.md) · [design and recovery guarantees](docs/DESIGN.md)
+See [design and recovery guarantees](docs/DESIGN.md) for the storage model and supplier protocol.
 
 ## Run
 
@@ -15,29 +15,27 @@ go build -o bin/catalog ./cmd/catalog
 
 On Windows, build with `go build -o bin/catalog.exe ./cmd/catalog` and use `./bin/catalog.exe` below. Run commands from the repository root. Put flags **after** the command.
 
-In terminal 1, start the fictional supplier with a one-time outage on the second delta batch:
+In terminal 1, start the fictional supplier:
 
 ```sh
-./bin/catalog supplier --fail-update delta --fail-cursor 1 --fail-count 1
+./bin/catalog supplier
 ```
 
 In terminal 2:
 
 ```sh
-# Seed three products. Save the JSON run ID if you want to inspect this run.
+# Import the initial catalog: three products across two batches.
 ./bin/catalog start --update baseline
 
-# Commits batch 0, then gets HTTP 503 on batch 1. Exits 1, status "blocked".
+# Import additions, changes and withdrawals. This fixture includes two bad records.
+# Exits 2 with status "finished_with_issues"; save its JSON run ID.
 ./bin/catalog start --update delta
 
-# The catalog is still present; include withdrawn products to inspect tombstones.
+# Inspect the catalog and runs. --all includes withdrawn products.
 ./bin/catalog products --all
 ./bin/catalog status
 
-# Replace RUN_ID with the delta run's id. This starts at batch 1, not batch 0.
-./bin/catalog resume --run RUN_ID
-
-# All batches are now consumed, but two data issues remain. Exit code is 2.
+# Replace RUN_ID with the delta run's id to inspect its changes and problems.
 ./bin/catalog changes --run RUN_ID
 ./bin/catalog issues --run RUN_ID
 
@@ -54,9 +52,9 @@ In terminal 2:
 
 The final catalog has **five identities**, including one withdrawn lamp, so **four active products**. The mug stays at version 4, the notebook at 2, and the withdrawn lamp at 4. The replay has no catalog changes and does not reopen superseded invalid data.
 
-Stop the supplier with Ctrl+C. Its one-time fault counter resets when it restarts; restart without fault flags for a healthy supplier. Each database command opens the same `data/catalog.db`. Use `--db another/path.db` to isolate a run.
+Stop the supplier with Ctrl+C. Each database command opens the same `data/catalog.db`. Use `--db another/path.db` to work with a separate catalog.
 
-### Demonstrate restart explicitly
+### Resume after an interruption
 
 ```sh
 ./bin/catalog start --update baseline --db data/restart.db --max-pages 1
@@ -67,16 +65,24 @@ Stop the supplier with Ctrl+C. Its one-time fault counter resets when it restart
 
 An abrupt process kill during a fetch can leave the persisted status as `running`. It does **not** mean completed: `next_cursor` is still present. Resume the same run. The tests also kill real child processes during fetch and during an uncommitted database transaction.
 
-### Automated demo
+### Simulate a supplier outage
 
-Python 3 is optional and only used for demo tooling:
+Restart the fictional supplier with a one-time failure on the second delta batch:
 
 ```sh
-python scripts/demo.py --binary ./bin/catalog
-# Windows: python scripts/demo.py --binary ./bin/catalog.exe
+./bin/catalog supplier --fail-update delta --fail-cursor 1 --fail-count 1
 ```
 
-This launches its own supplier on an unused local port, uses a fresh temporary database, asserts the expected behavior, prints a readable transcript, and saves `docs/demo-transcript.json`. Every operation runs as a separate CLI process. It leaves your default catalog alone. To render the captioned video again, see [docs/DEMO.md](docs/DEMO.md).
+Then run:
+
+```sh
+./bin/catalog start --update delta
+# Exits 1 with status "blocked" after committing batch 0. Save the run ID.
+./bin/catalog status --run RUN_ID
+./bin/catalog resume --run RUN_ID
+```
+
+Resume starts at batch 1 and preserves the committed work. The one-time fault counter resets when the supplier restarts; start it without fault flags for normal operation.
 
 ## Commands and outcomes
 
@@ -105,8 +111,8 @@ This records a resolution note; it does not apply the rejected payload. Valid re
 ```sh
 go test ./... -count=1
 go vet ./...
-go test ./... -coverprofile=coverage.out
-go tool cover -func=coverage.out
+go test ./... -coverprofile coverage.out
+go tool cover -func coverage.out
 # With a C toolchain, e.g. Ubuntu CI:
 go test -race ./...
 ```
@@ -124,11 +130,11 @@ Tests cover new/changed/withdrawn products, repeated and shuffled delivery, equa
 
 ## Unfinished production work
 
-The requested workflow is implemented against fictional data. Production additions would include a real supplier adapter/authentication, automatic retry with backoff, scheduling, staff authentication/attributed audit users, online backup/restore and schema migration tooling, retention and indexing for large audit histories, and multi-process/web access. List commands currently load results into memory, and issue resolution scans issue history. There is no public app deployment; the submitted video is the demo deliverable.
+The requested workflow is implemented against fictional data. Production additions would include a real supplier adapter/authentication, automatic retry with backoff, scheduling, staff authentication/attributed audit users, online backup/restore and schema migration tooling, retention and indexing for large audit histories, and multi-process/web access. List commands currently load results into memory, and issue resolution scans issue history.
 
 ## AI use
 
-This submission was built with OpenAI Codex for design, Go implementation, test development, documentation, and generation of the captioned demo from actual CLI output. AI was also used to review failure cases and correct test/implementation issues found while running the project. The repository includes the implementation and verification steps so each design choice can be inspected and explained.
+OpenAI Codex assisted with design, Go implementation, tests, and documentation.
 
 ## Layout
 
@@ -136,6 +142,5 @@ This submission was built with OpenAI Codex for design, Go implementation, test 
 cmd/catalog/          CLI and supplier server entry point
 internal/catalog/     version rules, durable store, import engine, recovery tests
 internal/supplier/    HTTP adapter and embedded fictional supplier snapshots
-scripts/              reproducible demo and video renderer
-docs/                 design notes, demo video, transcript and interview guide
+docs/                 design notes and recovery guarantees
 ```
